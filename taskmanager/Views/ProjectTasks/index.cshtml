@@ -1,0 +1,55 @@
+﻿@model IEnumerable<taskmanager.Models.ProjectTask>
+@{
+    Layout = "_Layout";
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Deadline</th>
+            <th>Assigned To</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var task in Model)
+        {
+            <tr>
+                <td>@task.Title</td>
+                <td>@task.Description</td>
+                <td>
+                    @if (task.Status == "Completed")
+                    {
+                        <span class="badge bg-success">Completed</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">@task.Status</span>
+                    }
+                </td>
+                <td>@(task.Deadline?.ToShortDateString() ?? "No deadline")</td>
+                <td>@(task.AssignedUser?.UserName ?? "Unassigned")</td>
+                <td>
+                    @if (task.Status != "Completed")
+                    {
+                        <form asp-action="MarkComplete" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@task.ProjectTaskID" />
+                            <button type="submit" class="btn btn-success btn-sm">✔ Mark Complete</button>
+                        </form>
+                    }
+                    else if (task.AssignedUserID == ViewData["CurrentUserId"]?.ToString())
+                    {
+                        <form asp-action="Delete" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@task.ProjectTaskID" />
+                            <button type="submit" class="btn btn-danger btn-sm">🗑 Delete</button>
+                        </form>
+                    }
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>

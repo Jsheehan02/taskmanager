@@ -1,0 +1,44 @@
+﻿@model IEnumerable<taskmanager.Models.Project>
+
+@{
+    ViewData["Title"] = "All Projects";
+}
+
+<h2>All Projects</h2>
+
+@if (TempData["ProjectSuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["ProjectSuccessMessage"]</div>
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Project Name</th>
+            <th>Description</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Created By</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var project in Model)
+        {
+            <tr>
+                <td>@project.ProjectName</td>
+                <td>@project.Description</td>
+                <td>@project.StartDate.ToShortDateString()</td>
+                <td>@(project.EndDate?.ToShortDateString() ?? "N/A")</td>
+                <td>@project.CreatedByUser?.UserName</td>
+                <td>
+                    <a href="@Url.Action("Details", "Projects", new { id = project.ProjectID })" class="btn btn-info">Details</a>
+                    <a href="@Url.Action("Edit", "Projects", new { id = project.ProjectID })" class="btn btn-warning">Edit</a>
+                    <a href="@Url.Action("Delete", "Projects", new { id = project.ProjectID })" class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a href="@Url.Action("Create", "Projects")" class="btn btn-primary mb-3">Create New Project</a>

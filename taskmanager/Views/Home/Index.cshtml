@@ -1,0 +1,38 @@
+﻿@model IEnumerable<taskmanager.Models.ProjectTask>
+
+@{
+    ViewData["Title"] = "Home - Task Manager";
+}
+
+<h2>Project Tasks</h2>
+
+<!-- Create Task Button -->
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Deadline</th>
+            <th>Assigned To</th>
+            <th>Project</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var projectTask in Model)
+        {
+            <tr>
+                <td>@projectTask.Title</td>
+                <td>@projectTask.Description</td>
+                <td>@projectTask.Status</td>
+                <td>@(projectTask.Deadline?.ToShortDateString() ?? "No deadline")</td>
+
+                <!-- Prevents null reference errors -->
+                <td>@(projectTask.AssignedUser?.UserName ?? "Unassigned")</td>
+                <td>@(projectTask.Project?.ProjectName ?? "No project")</td>
+            </tr>
+        }
+    </tbody>
+</table>

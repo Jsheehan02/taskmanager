@@ -1,0 +1,161 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using taskmanager.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - TaskManager</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/taskmanager.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">TaskManager</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">🏠 Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Projects" asp-action="Index">📁 Projects</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="ProjectTasks" asp-action="Index">📋 Tasks</a>
+                        </li>
+
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Projects" asp-action="Create">➕ Create Project</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="ProjectTasks" asp-action="Create">📝 Create Task</a>
+                            </li>
+                        }
+                    </ul>
+
+                    <!-- Notifications & Login/Logout Section (Aligned to Right) -->
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <!-- Notifications Dropdown (Top Right) -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    🔔 <span id="notificationCount" class="badge bg-danger">0</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown" id="notificationsList">
+                                    <li><span class="dropdown-item">No new notifications</span></li>
+                                </ul>
+                            </li>
+
+                            <!-- Welcome Message -->
+                            <li class="nav-item">
+                                <span class="nav-link text-white">
+                                    Welcome, <strong>@UserManager.GetUserName(User)</strong>
+                                </span>
+                            </li>
+
+                            <!-- Logout Button -->
+                            <li class="nav-item">
+                                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-link nav-link text-white">🚪 Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="" asp-controller="Account" asp-action="Login">🔑 Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" asp-area="" asp-controller="Account" asp-action="Register">📝 Register</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container mt-3">
+        <main role="main">
+            @RenderBody()
+        </main>
+
+        <!-- Display Success Messages -->
+        @if (TempData["RegistrationSuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["RegistrationSuccessMessage"]</div>
+        }
+
+        @if (TempData["LoginSuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["LoginSuccessMessage"]</div>
+        }
+
+        @if (TempData["LogoutMessage"] != null)
+        {
+            <div class="alert alert-info">@TempData["LogoutMessage"]</div>
+        }
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        async function loadNotifications() {
+            try {
+                const response = await fetch('/Notifications/GetUnread');
+                if (!response.ok) {
+                    throw new Error("Failed to fetch notifications.");
+                }
+
+                const notifications = await response.json();
+                const notificationCount = document.getElementById('notificationCount');
+                const notificationList = document.getElementById('notificationsList');
+
+                notificationList.innerHTML = "";
+
+                if (notifications.length > 0) {
+                    notificationCount.textContent = notifications.length;
+                    notificationCount.style.display = "inline"; // Show the badge
+
+                    notifications.forEach(notification => {
+                        const item = document.createElement('li');
+                        item.innerHTML = `<a class="dropdown-item" href="#" onclick="markAsRead(${notification.notificationID})">${notification.message}</a>`;
+                        notificationList.appendChild(item);
+                    });
+                } else {
+                    notificationCount.textContent = "0";
+                    notificationList.innerHTML = `<li><span class="dropdown-item">No new notifications</span></li>`;
+                }
+            } catch (error) {
+                console.error("Error loading notifications:", error);
+            }
+        }
+
+        async function markAsRead(notificationID) {
+            await fetch(`/Notifications/MarkAsRead/${notificationID}`, { method: 'POST' });
+            loadNotifications();
+        }
+
+        document.addEventListener('DOMContentLoaded', loadNotifications);
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
